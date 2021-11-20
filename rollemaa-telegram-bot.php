@@ -25,10 +25,11 @@ function rollemaa_telegram_send_notification( $post_id ) {
   $telegram_bot_api_key = getenv( 'TELEGRAM_BOT_API_KEY' );
   $method = 'sendMessage';
   $chat_id = getenv( 'TELEGRAM_CHAT_ID' );
-  $text = 'Uusi kirjoitus julkaistu: ' . get_the_title( $post_id ) . '. Linkki: ' . get_the_permalink( $post_id ) . '';
+$text = '🖊️ Uusi kirjoitus julkaistu: *' . get_the_title( $post_id ) . '*
+Linkki: ' . get_the_permalink( $post_id ) . '';
 
   // API call
-  $url = 'https://api.telegram.org/bot' . $telegram_bot_api_key . '/' . $method . '?chat_id=' . $chat_id . '&text=' . $text;
+  $url = 'https://api.telegram.org/bot' . $telegram_bot_api_key . '/' . $method . '?chat_id=' . $chat_id . '&text=' . $text . '&parse_mode=markdown';
 
   // Unhook
   remove_action( 'save_post', 'rollemaa_telegram_send_notification' );
