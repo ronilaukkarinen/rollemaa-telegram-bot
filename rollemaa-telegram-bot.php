@@ -45,9 +45,6 @@ Linkki: ' . get_the_permalink( $post_id ) . '';
 
   // Bail if other conditions not met
   if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
-  if ( empty( get_the_title( $post_id ) ) ) return;
-  if ( empty( get_the_content( $post_id ) ) ) return;
-  if ( empty( get_the_permalink( $post_id ) ) ) return;
   if ( wp_is_post_revision( $post_id ) ) return;
   if ( wp_is_post_autosave( $post_id ) ) return;
   if ( did_action( 'save_post' ) > 1 ) return;
