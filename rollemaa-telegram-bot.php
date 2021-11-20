@@ -22,25 +22,31 @@
 function rollemaa_telegram_send_notification( $postid ) {
 
   // Unhook
-  remove_action( 'post_updated', 'rollemaa_telegram_send_notification' );
+  remove_action( 'save_post', 'rollemaa_telegram_send_notification' );
 
   // Remove revisions to prevent double save
   remove_action( 'pre_post_update', 'wp_save_post_revision' );
 
+  // Get postdata
+  $postdata = get_post( $postid );
+
+  // Get time difference
+  $time_differ = round( abs( strtotime( $postdata->post_modified ) - strtotime( $postdata->post_date ) ) / 60, 2 );
+
   // Bail if conditions not met
-  if (
-    defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ||
-    wp_is_post_revision( $post_id ) ||
-    get_post_status( $postid ) !== 'publish' ||
-    get_the_title( $postid ) === null ||
-    get_the_permalink( $postid ) === null ||
-    get_post_status( $postid ) === 'draft' ||
-    get_post_status( $postid ) === 'auto-draft' ||
-    get_post_status( $postid ) === 'private' ||
-    get_post_status( $postid ) === 'future' ||
-    get_post_status( $postid ) === 'pending' ||
-    get_post_status( $postid ) === 'trash'
-  ) return;
+  if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+  if ( empty( get_the_title( $postid ) ) ) return;
+  if ( empty( get_the_content( $postid ) ) ) return;
+  if ( empty( get_the_permalink( $postid ) ) ) return;
+  if ( wp_is_post_revision( $post_id ) ) return;
+  if ( wp_is_post_autosave( $post_id ) ) return;
+  // if ( did_action( 'save_post' ) > 1 ) return;
+  if ( get_post_status( $postid ) === 'draft' ) return;
+  if ( get_post_status( $postid ) === 'auto-draft' ) return;
+  if ( get_post_status( $postid ) === 'private' ) return;
+  if ( get_post_status( $postid ) === 'future'  ) return;
+  if ( get_post_status( $postid ) === 'pending' ) return;
+  if ( get_post_status( $postid ) === 'trash' ) return;
 
   // Settings
   $telegram_bot_api_key = getenv( 'TELEGRAM_BOT_API_KEY' );
@@ -52,9 +58,12 @@ function rollemaa_telegram_send_notification( $postid ) {
   $url = 'https://api.telegram.org/bot' . $telegram_bot_api_key . '/' . $method . '?chat_id=' . $chat_id . '&text=' . $text;
 
   // Send a message
-  wp_remote_get( $url );
+  if ( $time_differ < 0.10 ) {
+    wp_remote_get( $url );
+  }
 
   // Re-hook function
-  add_action( 'post_updated', 'rollemaa_telegram_send_notification' );
+  add_action( 'save_post', 'rollemaa_telegram_send_notification' );
+
 }
-add_action( 'post_updated', 'rollemaa_telegram_send_notification' );
+add_action( 'save_post', 'rollemaa_telegram_send_notification' );
