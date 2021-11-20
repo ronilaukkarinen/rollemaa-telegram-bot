@@ -21,6 +21,15 @@
  */
 function rollemaa_telegram_send_notification( $postid ) {
 
+  // Settings
+  $telegram_bot_api_key = getenv( 'TELEGRAM_BOT_API_KEY' );
+  $method = 'sendMessage';
+  $chat_id = getenv( 'TELEGRAM_CHAT_ID' );
+  $text = 'Uusi kirjoitus julkaistu: ' . get_the_title( $postid ) . '. Linkki: ' . get_the_permalink( $postid ) . '';
+
+  // API call
+  $url = 'https://api.telegram.org/bot' . $telegram_bot_api_key . '/' . $method . '?chat_id=' . $chat_id . '&text=' . $text;
+
   // Unhook
   remove_action( 'save_post', 'rollemaa_telegram_send_notification' );
 
@@ -33,29 +42,40 @@ function rollemaa_telegram_send_notification( $postid ) {
   // Get time difference
   $time_differ = round( abs( strtotime( $postdata->post_modified ) - strtotime( $postdata->post_date ) ) / 60, 2 );
 
-  // Bail if conditions not met
+  if ( 'movie' === get_post_type( $postid ) ) {
+
+    // Bail if conditions not met
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+    if ( wp_is_post_revision( $post_id ) ) return;
+    if ( wp_is_post_autosave( $post_id ) ) return;
+    if ( did_action( 'save_post' ) > 1 ) return;
+    if ( get_post_status( $postid ) === 'draft' ) return;
+    if ( get_post_status( $postid ) === 'auto-draft' ) return;
+    if ( get_post_status( $postid ) === 'private' ) return;
+    if ( get_post_status( $postid ) === 'future'  ) return;
+    if ( get_post_status( $postid ) === 'pending' ) return;
+    if ( get_post_status( $postid ) === 'trash' ) return;
+
+    // Send a message
+    if ( $time_differ < 0.10 ) {
+      wp_remote_get( $url );
+    }
+  }
+
+  // Bail if other conditions not met
   if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
   if ( empty( get_the_title( $postid ) ) ) return;
   if ( empty( get_the_content( $postid ) ) ) return;
   if ( empty( get_the_permalink( $postid ) ) ) return;
   if ( wp_is_post_revision( $post_id ) ) return;
   if ( wp_is_post_autosave( $post_id ) ) return;
-  // if ( did_action( 'save_post' ) > 1 ) return;
+  if ( did_action( 'save_post' ) > 1 ) return;
   if ( get_post_status( $postid ) === 'draft' ) return;
   if ( get_post_status( $postid ) === 'auto-draft' ) return;
   if ( get_post_status( $postid ) === 'private' ) return;
   if ( get_post_status( $postid ) === 'future'  ) return;
   if ( get_post_status( $postid ) === 'pending' ) return;
   if ( get_post_status( $postid ) === 'trash' ) return;
-
-  // Settings
-  $telegram_bot_api_key = getenv( 'TELEGRAM_BOT_API_KEY' );
-  $method = 'sendMessage';
-  $chat_id = getenv( 'TELEGRAM_CHAT_ID' );
-  $text = 'Uusi kirjoitus julkaistu: ' . get_the_title( $postid ) . '. Linkki: ' . get_the_permalink( $postid ) . '';
-
-  // API call
-  $url = 'https://api.telegram.org/bot' . $telegram_bot_api_key . '/' . $method . '?chat_id=' . $chat_id . '&text=' . $text;
 
   // Send a message
   if ( $time_differ < 0.10 ) {
