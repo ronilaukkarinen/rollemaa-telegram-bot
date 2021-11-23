@@ -56,7 +56,7 @@ Linkki: ' . get_the_permalink( $post_id ) . '';
   if ( get_post_status( $post_id ) === 'trash' ) return;
 
   // Send a message
-  if ( $time_differ < 0.10 ) {
+  if ( $time_differ < 0.50 ) {
     wp_remote_get( $url );
   }
 
